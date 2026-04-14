@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fcfbf8;
+  --foreground: #1f1a14;
+  --card: rgba(255, 255, 255, 0.84);
+  --muted: #6b6259;
+  --accent: #8a4b13;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --font-sans: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --font-mono: "Consolas", "SFMono-Regular", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+a,
+button,
+input {
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+::selection {
+  background: rgba(138, 75, 19, 0.18);
+}
