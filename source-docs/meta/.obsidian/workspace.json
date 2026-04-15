@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "95c0ddf8290905c3",
+        "id": "cfad60fe45b38313",
         "type": "tabs",
         "children": [
           {
-            "id": "dde1a18bc151ecf1",
+            "id": "f8f248a76bbcbd6d",
             "type": "leaf",
             "state": {
-              "type": "split-diff-view",
-              "state": {
-                "aFile": "source-docs/meta/.obsidian/workspace.json",
-                "bFile": "source-docs/meta/.obsidian/workspace.json",
-                "aRef": ""
-              },
-              "icon": "diff",
-              "title": "Diff: workspace.json  (Working Tree)"
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新規タブ"
             }
           }
         ]
@@ -194,8 +190,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "44a959e7ed63951e",
+  "active": "0d59592c2811cc0c",
   "lastOpenFiles": [
+    "無題のファイル.md",
     "r8kaizen_qa.md",
     "r8kaizen_qa.md.tmp.21064.1776285330392",
     "福祉・介護職員等処遇改善加算に関するQ&A(第1版).md",
