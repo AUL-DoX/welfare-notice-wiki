@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "福祉・介護職員等処遇改善加算に関するQ&A(第1版).md",
+                "file": "02-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業費補助金交付要綱.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "福祉・介護職員等処遇改善加算に関するQ&A(第1版)"
+              "title": "02-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業費補助金交付要綱"
             }
           }
         ]
@@ -180,11 +180,13 @@
       "daily-notes:今日のデイリーノートを開く": false,
       "templates:テンプレートを挿入": false,
       "command-palette:コマンドパレットを開く": false,
-      "bases:新規ベースを作成": false
+      "bases:新規ベースを作成": false,
+      "obsidian-git:Open Git source control": false
     }
   },
   "active": "dde1a18bc151ecf1",
   "lastOpenFiles": [
+    "福祉・介護職員等処遇改善加算に関するQ&A(第1版).md",
     "02-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業費補助金交付要綱.md",
     "（修正）03_別紙様式２（加算　計画書）(基本情報入力シート).md",
     "01-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業実施要綱.md"
