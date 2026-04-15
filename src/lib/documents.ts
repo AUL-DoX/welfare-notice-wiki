@@ -260,8 +260,18 @@ async function syncDocumentMetadata(files: string[], documentMetadata: DocumentM
     return;
   }
 
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DOCUMENT_METADATA_FILE_PATH, JSON.stringify(documentMetadata, null, 2), "utf8");
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(DOCUMENT_METADATA_FILE_PATH, JSON.stringify(documentMetadata, null, 2), "utf8");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    // Vercel's runtime filesystem is read-only, so missing metadata should not crash the app.
+    if (code === "EROFS" || code === "EPERM") {
+      return;
+    }
+
+    throw error;
+  }
 }
 
 async function parseDocument(
