@@ -1,0 +1,184 @@
+{
+  "main": {
+    "id": "cc735048f20c2722",
+    "type": "split",
+    "children": [
+      {
+        "id": "e64b642ae35e72ca",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a6c679a8081f3c5e",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新規タブ"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6f91b583578a808c",
+    "type": "split",
+    "children": [
+      {
+        "id": "501ac6b8df0a8cbd",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "260dac931a1608ac",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "ファイルエクスプローラ"
+            }
+          },
+          {
+            "id": "10b9cc9d0efd4c88",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "検索"
+            }
+          },
+          {
+            "id": "3e262b6f8d1d2ddc",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "ブックマーク"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "8ba70ca3ca85a665",
+    "type": "split",
+    "children": [
+      {
+        "id": "a75deaa6f803a977",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f07b1141a8a6c8f3",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "バックリンク"
+            }
+          },
+          {
+            "id": "0cdf05271943a31e",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "source-docs/01-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業実施要綱.pdf",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "01-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業実施要綱からのアウトゴーイングリンク"
+            }
+          },
+          {
+            "id": "975cf35d5a9a35f4",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "タグ"
+            }
+          },
+          {
+            "id": "c1f1c6d793f831b6",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "すべてのプロパティ"
+            }
+          },
+          {
+            "id": "d4a8c421545d3592",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "source-docs/01-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業実施要綱.pdf",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "01-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業実施要綱のアウトライン"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:クイックスイッチャーを開く": false,
+      "graph:グラフビューを開く": false,
+      "canvas:新規キャンバスを作成": false,
+      "daily-notes:今日のデイリーノートを開く": false,
+      "templates:テンプレートを挿入": false,
+      "command-palette:コマンドパレットを開く": false,
+      "bases:新規ベースを作成": false
+    }
+  },
+  "active": "a6c679a8081f3c5e",
+  "lastOpenFiles": [
+    "source-docs/01-2_令和８年度（2026年度）北海道障害福祉従事者処遇改善緊急支援事業実施要綱.pdf"
+  ]
+}

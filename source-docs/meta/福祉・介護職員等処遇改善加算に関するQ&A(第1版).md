@@ -1,4 +1,6 @@
 ---
 category: care
-keywords: []
+keywords:
+  - 処遇改善
+  - 障害福祉サービス
 ---
