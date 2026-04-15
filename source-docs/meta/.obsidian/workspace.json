@@ -11,14 +11,14 @@
             "id": "dde1a18bc151ecf1",
             "type": "leaf",
             "state": {
-              "type": "split-diff-view",
+              "type": "markdown",
               "state": {
-                "aFile": "source-docs/meta/.obsidian/workspace.json",
-                "bFile": "source-docs/meta/.obsidian/workspace.json",
-                "aRef": ""
+                "file": "福祉・介護職員等処遇改善加算に関するQ&A(第1版).md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "diff",
-              "title": "Diff: workspace.json  (Working Tree)"
+              "icon": "lucide-file",
+              "title": "福祉・介護職員等処遇改善加算に関するQ&A(第1版)"
             }
           }
         ]
