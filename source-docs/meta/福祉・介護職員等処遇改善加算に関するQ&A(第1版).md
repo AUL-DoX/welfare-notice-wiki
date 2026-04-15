@@ -1,6 +1,7 @@
 ---
-category: care
+category: 障がい福祉
 keywords:
   - 処遇改善
   - 障害福祉サービス
+  - Q&A
 ---
