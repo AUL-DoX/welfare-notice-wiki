@@ -9,6 +9,7 @@ export const SOURCE_DOCS_DIR = path.join(process.cwd(), "source-docs");
 const DATA_DIR = path.join(process.cwd(), "data");
 const CATEGORY_FILE_PATH = path.join(DATA_DIR, "document-categories.json");
 const DOCUMENT_METADATA_FILE_PATH = path.join(DATA_DIR, "document-metadata.json");
+const DOCUMENT_KEYWORDS_FILE_PATH = path.join(DATA_DIR, "document-keywords.json");
 const require = createRequire(import.meta.url);
 
 const xmlParser = new XMLParser({
@@ -84,6 +85,7 @@ export type DocumentRecord = {
   deadline: string | null;
   summary: string;
   actions: string[];
+  manualKeywords: string[];
   keywords: string[];
   relatedTerms: string[];
   preview: string;
@@ -113,6 +115,12 @@ type DocumentMetadataMap = Record<
     uploadedAt: string;
   }
 >;
+type DocumentKeywordMap = Record<
+  string,
+  {
+    manualKeywords: string[];
+  }
+>;
 
 export async function ensureSourceDocsDir() {
   await fs.mkdir(SOURCE_DOCS_DIR, { recursive: true });
@@ -134,9 +142,10 @@ export async function getDocumentIndex(query?: string): Promise<SearchResult> {
 
   const categoryMap = await loadCategoryMap();
   const documentMetadata = await loadDocumentMetadata();
+  const documentKeywords = await loadDocumentKeywords();
   await syncDocumentMetadata(files, documentMetadata);
   const results = await Promise.all(
-    files.map((filePath) => parseDocument(filePath, categoryMap, documentMetadata)),
+    files.map((filePath) => parseDocument(filePath, categoryMap, documentMetadata, documentKeywords)),
   );
   const documents = results
     .flatMap((result) => (result.ok ? [result.document] : []))
@@ -197,6 +206,30 @@ export async function updateDocumentCategory(slug: string, category: DocumentCat
   return { slug: normalizedSlug, category };
 }
 
+export async function updateDocumentKeywords(slug: string, keywords: string[]) {
+  const normalizedSlug = slug.trim();
+
+  if (!normalizedSlug) {
+    throw new Error("slug is required");
+  }
+
+  const manualKeywords = Array.from(
+    new Set(
+      keywords
+        .map((keyword) => keyword.trim())
+        .filter(Boolean)
+        .slice(0, 20),
+    ),
+  );
+
+  const keywordMap = await loadDocumentKeywords();
+  keywordMap[normalizedSlug] = { manualKeywords };
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(DOCUMENT_KEYWORDS_FILE_PATH, JSON.stringify(keywordMap, null, 2), "utf8");
+
+  return { slug: normalizedSlug, manualKeywords };
+}
+
 async function loadCategoryMap(): Promise<CategoryMap> {
   try {
     const raw = await fs.readFile(CATEGORY_FILE_PATH, "utf8");
@@ -229,6 +262,38 @@ async function loadDocumentMetadata(): Promise<DocumentMetadataMap> {
         }
 
         return [[key, { uploadedAt: value.uploadedAt }]];
+      }),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return {};
+    }
+
+    throw error;
+  }
+}
+
+async function loadDocumentKeywords(): Promise<DocumentKeywordMap> {
+  try {
+    const raw = await fs.readFile(DOCUMENT_KEYWORDS_FILE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as Record<string, { manualKeywords?: unknown }>;
+
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([key, value]) => {
+        if (!Array.isArray(value?.manualKeywords)) {
+          return [];
+        }
+
+        return [
+          [
+            key,
+            {
+              manualKeywords: value.manualKeywords.filter(
+                (keyword): keyword is string => typeof keyword === "string",
+              ),
+            },
+          ],
+        ];
       }),
     );
   } catch (error) {
@@ -278,25 +343,32 @@ async function parseDocument(
   filePath: string,
   categoryMap: CategoryMap,
   documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
 ) {
   const extension = path.extname(filePath).toLowerCase();
 
   try {
     switch (extension) {
       case ".pdf":
-        return { ok: true as const, document: await parsePdf(filePath, categoryMap, documentMetadata) };
+        return {
+          ok: true as const,
+          document: await parsePdf(filePath, categoryMap, documentMetadata, documentKeywords),
+        };
       case ".pptx":
-        return { ok: true as const, document: await parsePptx(filePath, categoryMap, documentMetadata) };
+        return {
+          ok: true as const,
+          document: await parsePptx(filePath, categoryMap, documentMetadata, documentKeywords),
+        };
       case ".md":
       case ".txt":
         return {
           ok: true as const,
-          document: await parseTextDocument(filePath, categoryMap, documentMetadata),
+          document: await parseTextDocument(filePath, categoryMap, documentMetadata, documentKeywords),
         };
       case ".csv":
         return {
           ok: true as const,
-          document: await parseCsvDocument(filePath, categoryMap, documentMetadata),
+          document: await parseCsvDocument(filePath, categoryMap, documentMetadata, documentKeywords),
         };
       default:
         return {
@@ -324,6 +396,7 @@ async function parsePdf(
   filePath: string,
   categoryMap: CategoryMap,
   documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
 ) {
   const buffer = await fs.readFile(filePath);
   const pdfjs = require("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js") as {
@@ -372,13 +445,14 @@ async function parsePdf(
   }
 
   document.destroy();
-  return buildRecord(filePath, "pdf", text, [], categoryMap, documentMetadata);
+  return buildRecord(filePath, "pdf", text, [], categoryMap, documentMetadata, documentKeywords);
 }
 
 async function parsePptx(
   filePath: string,
   categoryMap: CategoryMap,
   documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
 ) {
   const buffer = await fs.readFile(filePath);
   const zip = await JSZip.loadAsync(buffer);
@@ -399,13 +473,22 @@ async function parsePptx(
     .filter((line): line is string => Boolean(line))
     .slice(0, 12);
 
-  return buildRecord(filePath, "pptx", slides.join("\n\n"), slideTitles, categoryMap, documentMetadata);
+  return buildRecord(
+    filePath,
+    "pptx",
+    slides.join("\n\n"),
+    slideTitles,
+    categoryMap,
+    documentMetadata,
+    documentKeywords,
+  );
 }
 
 async function parseTextDocument(
   filePath: string,
   categoryMap: CategoryMap,
   documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
 ) {
   const text = await fs.readFile(filePath, "utf8");
   return buildRecord(
@@ -415,6 +498,7 @@ async function parseTextDocument(
     [],
     categoryMap,
     documentMetadata,
+    documentKeywords,
   );
 }
 
@@ -422,10 +506,11 @@ async function parseCsvDocument(
   filePath: string,
   categoryMap: CategoryMap,
   documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
 ) {
   const buffer = await fs.readFile(filePath);
   const csvText = decodeCsvBuffer(buffer);
-  return buildRecord(filePath, "csv", csvToReadableText(csvText), [], categoryMap, documentMetadata);
+  return buildRecord(filePath, "csv", csvToReadableText(csvText), [], categoryMap, documentMetadata, documentKeywords);
 }
 
 function extractSlideNumber(name: string) {
@@ -462,6 +547,7 @@ async function buildRecord(
   slideTitles: string[],
   categoryMap: CategoryMap,
   documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
 ): Promise<DocumentRecord> {
   const stats = await fs.stat(filePath);
   const normalizedText = normalizeText(rawText);
@@ -472,6 +558,8 @@ async function buildRecord(
   const keywords = extractKeywords(`${path.basename(filePath)}\n${normalizedText}`);
   const slug = slugify(path.basename(filePath));
   const uploadedAt = documentMetadata[slug]?.uploadedAt ?? stats.birthtime.toISOString();
+  const manualKeywords = documentKeywords[slug]?.manualKeywords ?? [];
+  const mergedKeywords = Array.from(new Set([...manualKeywords, ...keywords]));
 
   return {
     slug,
@@ -485,8 +573,9 @@ async function buildRecord(
     deadline: detectDeadline(normalizedText),
     summary: buildSummary(lines),
     actions: extractActions(normalizedText),
-    keywords,
-    relatedTerms: keywords.slice(0, 8),
+    manualKeywords,
+    keywords: mergedKeywords,
+    relatedTerms: mergedKeywords.slice(0, 8),
     preview: buildPreview(normalizedText),
     body: normalizedText,
     slideTitles,
