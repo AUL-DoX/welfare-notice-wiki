@@ -246,6 +246,25 @@ export async function updateDocumentKeywords(slug: string, keywords: string[]) {
   return { slug: normalizedSlug, manualKeywords };
 }
 
+const CATEGORY_ALIASES: Record<string, DocumentCategory> = {
+  // 英語キー
+  disability: "disability",
+  care: "care",
+  common: "common",
+  unclassified: "unclassified",
+  // 日本語エイリアス
+  障がい福祉: "disability",
+  障害福祉: "disability",
+  介護: "care",
+  共通: "common",
+  未分類: "unclassified",
+};
+
+function parseCategory(value: unknown): DocumentCategory | undefined {
+  if (typeof value !== "string") return undefined;
+  return CATEGORY_ALIASES[value.trim()] ?? undefined;
+}
+
 type MetaFrontmatter = {
   category?: DocumentCategory;
   keywords?: string[];
@@ -258,10 +277,7 @@ async function loadMetaFrontmatter(filePath: string): Promise<MetaFrontmatter> {
   try {
     const raw = await fs.readFile(metaPath, "utf8");
     const { data } = matter(raw);
-    const category =
-      typeof data.category === "string" && data.category in DOCUMENT_CATEGORY_LABELS
-        ? (data.category as DocumentCategory)
-        : undefined;
+    const category = parseCategory(data.category);
     const keywords = Array.isArray(data.keywords)
       ? data.keywords.filter((k): k is string => typeof k === "string" && k.trim() !== "")
       : undefined;
