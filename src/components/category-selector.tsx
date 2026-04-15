@@ -10,9 +10,11 @@ type Props = {
   slug: string;
   category: DocumentCategory;
   compact?: boolean;
+  editable?: boolean;
+  adminToken?: string | null;
 };
 
-export function CategorySelector({ slug, category, compact = false }: Props) {
+export function CategorySelector({ slug, category, compact = false, editable = false, adminToken = null }: Props) {
   const router = useRouter();
   const [savingCategory, setSavingCategory] = useState<DocumentCategory | null>(null);
 
@@ -28,6 +30,7 @@ export function CategorySelector({ slug, category, compact = false }: Props) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(adminToken ? { "x-admin-token": adminToken } : {}),
         },
         body: JSON.stringify({
           slug,
@@ -63,13 +66,14 @@ export function CategorySelector({ slug, category, compact = false }: Props) {
             <button
               key={entry}
               type="button"
-              onClick={() => updateCategory(entry)}
-              disabled={Boolean(savingCategory)}
+              onClick={() => editable && updateCategory(entry)}
+              disabled={!editable || Boolean(savingCategory)}
               className={[
                 "rounded-full border px-3 py-2 font-medium transition",
                 compact ? "text-xs" : "text-sm md:text-base",
                 getCategoryButtonClass(entry, isActive),
                 isSaving ? "opacity-70" : "",
+                editable ? "" : "cursor-default",
               ].join(" ")}
             >
               {DOCUMENT_CATEGORY_LABELS[entry]}

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireAdminMode } from "@/lib/admin";
 import { updateDocumentCategory } from "@/lib/documents";
 import type { DocumentCategory } from "@/lib/document-categories";
 
 export async function POST(request: Request) {
   try {
+    requireAdminMode(request);
     const body = (await request.json()) as {
       slug?: string;
       category?: string;

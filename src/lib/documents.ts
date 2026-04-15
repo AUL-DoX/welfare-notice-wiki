@@ -196,8 +196,17 @@ export async function updateDocumentCategory(slug: string, category: DocumentCat
 
   const categoryMap = await loadCategoryMap();
   categoryMap[normalizedSlug] = category;
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(CATEGORY_FILE_PATH, JSON.stringify(categoryMap, null, 2), "utf8");
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(CATEGORY_FILE_PATH, JSON.stringify(categoryMap, null, 2), "utf8");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "EROFS" || code === "EPERM") {
+      throw new Error("本番環境ではカテゴリ保存ができません。ローカルでJSONを更新して git push してください。");
+    }
+
+    throw error;
+  }
 
   return { slug: normalizedSlug, category };
 }
@@ -220,8 +229,17 @@ export async function updateDocumentKeywords(slug: string, keywords: string[]) {
 
   const keywordMap = await loadDocumentKeywords();
   keywordMap[normalizedSlug] = { manualKeywords };
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DOCUMENT_KEYWORDS_FILE_PATH, JSON.stringify(keywordMap, null, 2), "utf8");
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(DOCUMENT_KEYWORDS_FILE_PATH, JSON.stringify(keywordMap, null, 2), "utf8");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "EROFS" || code === "EPERM") {
+      throw new Error("本番環境ではキーワード保存ができません。ローカルでJSONを更新して git push してください。");
+    }
+
+    throw error;
+  }
 
   return { slug: normalizedSlug, manualKeywords };
 }

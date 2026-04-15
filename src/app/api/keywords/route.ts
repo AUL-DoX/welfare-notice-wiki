@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { requireAdminMode } from "@/lib/admin";
 import { updateDocumentKeywords } from "@/lib/documents";
 
 export async function POST(request: Request) {
   try {
+    requireAdminMode(request);
     const body = (await request.json()) as {
       slug?: string;
       keywords?: string[];

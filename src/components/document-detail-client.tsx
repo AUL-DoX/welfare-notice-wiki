@@ -7,9 +7,11 @@ import type { DocumentRecord } from "@/lib/documents";
 
 type Props = {
   doc: DocumentRecord;
+  isAdmin?: boolean;
+  adminToken?: string | null;
 };
 
-export function DocumentDetailClient({ doc }: Props) {
+export function DocumentDetailClient({ doc, isAdmin = false, adminToken = null }: Props) {
   const searchParams = useSearchParams();
   const focus = searchParams.get("focus") ?? "";
   const contentRef = useRef<HTMLDivElement>(null);
@@ -63,6 +65,7 @@ export function DocumentDetailClient({ doc }: Props) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(adminToken ? { "x-admin-token": adminToken } : {}),
         },
         body: JSON.stringify({
           slug: doc.slug,
@@ -158,34 +161,36 @@ export function DocumentDetailClient({ doc }: Props) {
             ))}
           </div>
 
-          <div className="mt-5 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
-            <label className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">
-              キーワード追加
-            </label>
-            <p className="mt-2 text-sm leading-6 text-stone-600">
-              カンマ、改行、スペース、`#` 区切りでまとめて追加できます。
-            </p>
-            <textarea
-              value={keywordInput}
-              onChange={(event) => setKeywordInput(event.target.value)}
-              placeholder="#処遇改善加算 #障害福祉サービス #交付要綱"
-              className="mt-3 min-h-32 w-full rounded-[1.25rem] border border-stone-200 bg-white px-4 py-3 text-base leading-7 text-stone-800 outline-none transition focus:border-amber-400"
-            />
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <div className="text-sm text-stone-500">
-                {saveState.error ? <span className="text-rose-600">{saveState.error}</span> : null}
-                {saveState.message ? <span className="text-emerald-700">{saveState.message}</span> : null}
+          {isAdmin ? (
+            <div className="mt-5 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
+              <label className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">
+                管理者用キーワード追加
+              </label>
+              <p className="mt-2 text-sm leading-6 text-stone-600">
+                カンマ、改行、スペース、`#` 区切りでまとめて追加できます。
+              </p>
+              <textarea
+                value={keywordInput}
+                onChange={(event) => setKeywordInput(event.target.value)}
+                placeholder="#処遇改善加算 #障害福祉サービス #交付要綱"
+                className="mt-3 min-h-32 w-full rounded-[1.25rem] border border-stone-200 bg-white px-4 py-3 text-base leading-7 text-stone-800 outline-none transition focus:border-amber-400"
+              />
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="text-sm text-stone-500">
+                  {saveState.error ? <span className="text-rose-600">{saveState.error}</span> : null}
+                  {saveState.message ? <span className="text-emerald-700">{saveState.message}</span> : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveKeywords}
+                  disabled={saveState.saving}
+                  className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-900 disabled:cursor-wait disabled:bg-stone-400"
+                >
+                  {saveState.saving ? "保存中..." : "関連キーワードを保存"}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleSaveKeywords}
-                disabled={saveState.saving}
-                className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-900 disabled:cursor-wait disabled:bg-stone-400"
-              >
-                {saveState.saving ? "保存中..." : "関連キーワードを保存"}
-              </button>
             </div>
-          </div>
+          ) : null}
         </section>
       </aside>
     </div>

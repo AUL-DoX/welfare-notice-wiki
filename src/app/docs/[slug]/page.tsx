@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isAdminModeToken } from "@/lib/admin";
 import { getDocumentBySlug } from "@/lib/documents";
 import { DOCUMENT_CATEGORY_LABELS } from "@/lib/document-categories";
 import { CategorySelector } from "@/components/category-selector";
@@ -11,11 +12,16 @@ type DetailProps = {
   params: Promise<{
     slug: string;
   }>;
+  searchParams: Promise<{
+    admin?: string;
+  }>;
 };
 
-export default async function DocumentDetail({ params }: DetailProps) {
+export default async function DocumentDetail({ params, searchParams }: DetailProps) {
   const { slug } = await params;
+  const { admin } = await searchParams;
   const doc = await getDocumentBySlug(decodeURIComponent(slug));
+  const isAdmin = isAdminModeToken(admin);
 
   if (!doc) {
     notFound();
@@ -60,7 +66,12 @@ export default async function DocumentDetail({ params }: DetailProps) {
                 近い文書を探す
               </Link>
             </div>
-            <CategorySelector slug={doc.slug} category={doc.category} />
+            <CategorySelector
+              slug={doc.slug}
+              category={doc.category}
+              editable={isAdmin}
+              adminToken={isAdmin ? admin ?? null : null}
+            />
           </div>
 
           <aside className="self-start space-y-4 rounded-[1.5rem] bg-stone-50 p-4">
@@ -75,7 +86,7 @@ export default async function DocumentDetail({ params }: DetailProps) {
           </aside>
         </section>
 
-        <DocumentDetailClient doc={doc} />
+        <DocumentDetailClient doc={doc} isAdmin={isAdmin} adminToken={isAdmin ? admin ?? null : null} />
       </div>
     </main>
   );
