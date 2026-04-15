@@ -31,15 +31,15 @@ export default async function Home({ searchParams }: HomeProps) {
               Wiki
             </h1>
             <p className="max-w-4xl text-lg leading-9 text-stone-700 md:text-xl">
-              キーワードを入力すると、介護と障害福祉サービスに関する通知文を検索できます。
-              詳細ページでは、該当の単語や文章が黄色で強調表示されます。
+              キーワードを入力すると、介護と障害福祉サービスに関する通知文を検索できます。詳細ページでは、
+              運用時に追加した関連キーワードを確認できます。
             </p>
             <form className="flex flex-col gap-3 sm:flex-row" action="/">
               <input
                 type="search"
                 name="q"
                 defaultValue={query}
-                placeholder="例: キャリアパス 処遇改善 特別事情届出書"
+                placeholder="例: 処遇改善加算 交付要綱 補助金"
                 className="min-w-0 flex-1 rounded-full border-2 border-stone-400 bg-stone-50 px-5 py-3 text-lg outline-none placeholder:text-stone-400 transition focus:border-amber-800 focus:bg-white md:text-xl"
               />
               <button
@@ -53,7 +53,7 @@ export default async function Home({ searchParams }: HomeProps) {
                   href="/"
                   className="rounded-full border border-stone-300 px-6 py-3 text-center text-base font-semibold text-stone-700 transition hover:border-amber-900 hover:text-amber-900 md:text-lg"
                 >
-                  トップに戻る
+                  検索を解除
                 </Link>
               ) : null}
             </form>
@@ -71,7 +71,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 <br />
                 全文ページへ移動
                 <br />
-                関連する文章や語句を確認
+                関連キーワードを確認
               </p>
             </div>
           </aside>
@@ -79,7 +79,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
         {failedDocuments.length > 0 ? (
           <section className="rounded-[1.5rem] border border-amber-300 bg-amber-50 p-4 text-amber-950">
-            <h2 className="text-lg font-semibold">取り込み失敗</h2>
+            <h2 className="text-lg font-semibold">読み込みエラー</h2>
             <div className="mt-3 flex flex-col gap-2">
               {failedDocuments.map((item) => (
                 <p key={item.fileName} className="rounded-2xl bg-white px-4 py-3 text-sm leading-6">
@@ -94,12 +94,10 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-stone-500">Documents</p>
-              <h2 className="mt-1 text-2xl font-semibold">
-                {query ? `「${query}」の検索結果` : "新着記事"}
-              </h2>
+              <h2 className="mt-1 text-2xl font-semibold">{query ? `「${query}」の検索結果` : "新着記事"}</h2>
             </div>
             <div className="flex items-center gap-3">
-              <p className="text-sm text-stone-600">{documents.length} 件</p>
+              <p className="text-sm text-stone-600">{documents.length}件</p>
               {query ? (
                 <Link
                   href="/"
@@ -156,9 +154,7 @@ export default async function Home({ searchParams }: HomeProps) {
                   <p className="text-lg leading-8 text-stone-700 md:text-xl">{latestDocument.summary}</p>
                 </div>
 
-                <p className="text-lg leading-8 text-stone-700 md:text-[1.15rem]">
-                  {latestDocument.preview}
-                </p>
+                <p className="text-lg leading-8 text-stone-700 md:text-[1.15rem]">{latestDocument.preview}</p>
 
                 <div className="flex flex-wrap gap-3">
                   <Link
@@ -180,27 +176,6 @@ export default async function Home({ searchParams }: HomeProps) {
 
               <aside className="space-y-3 rounded-[1.35rem] bg-stone-50 p-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-stone-900 md:text-xl">関連する文章</h3>
-                  <div className="mt-3 flex flex-col gap-2">
-                    {latestDocument.actions.length > 0 ? (
-                      latestDocument.actions.slice(0, 5).map((action) => (
-                        <Link
-                          key={action}
-                          href={`/docs/${encodeURIComponent(latestDocument.slug)}?focus=${encodeURIComponent(action)}`}
-                          className="rounded-[1rem] bg-white px-4 py-3 text-base leading-7 text-stone-700 transition hover:bg-amber-50 md:text-lg md:leading-8"
-                        >
-                          {action}
-                        </Link>
-                      ))
-                    ) : (
-                      <p className="rounded-[1rem] bg-white px-4 py-3 text-base text-stone-500 md:text-lg">
-                        抽出できた文章はまだありません。
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
                   <h3 className="text-lg font-semibold text-stone-900 md:text-xl">関連キーワード</h3>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {latestDocument.relatedTerms.length > 0 ? (
@@ -215,7 +190,7 @@ export default async function Home({ searchParams }: HomeProps) {
                       ))
                     ) : (
                       <p className="rounded-[1rem] bg-white px-4 py-3 text-base text-stone-500 md:text-lg">
-                        関連キーワードはまだありません。
+                        キーワードは詳細画面から追加できます。
                       </p>
                     )}
                   </div>
@@ -225,7 +200,7 @@ export default async function Home({ searchParams }: HomeProps) {
           ) : (
             <div className="rounded-[1.5rem] border border-dashed border-stone-300 bg-white/70 p-8 text-center text-stone-600">
               {query
-                ? "検索に一致する文書がありません。別の語句で試してください。"
+                ? "検索に一致する文書がありません。別の表現で試してください。"
                 : "文書が登録されると、ここに新着記事が表示されます。"}
             </div>
           )}

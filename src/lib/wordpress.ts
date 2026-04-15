@@ -13,7 +13,6 @@ export function renderWordPressHtml(doc: DocumentRecord) {
     `<div class="wnw-meta">${metaItems.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`,
     `<h1>${escapeHtml(doc.title)}</h1>`,
     doc.summary ? `<p class="wnw-summary">${escapeHtml(doc.summary)}</p>` : "",
-    doc.actions.length > 0 ? renderListSection("対応すること", doc.actions) : "",
     doc.keywords.length > 0 ? renderTagSection("関連キーワード", doc.keywords) : "",
     renderBody(doc.body),
   ]

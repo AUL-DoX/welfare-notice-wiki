@@ -68,9 +68,6 @@ const STOP_WORDS = new Set([
   "html",
 ]);
 
-const ACTION_PATTERN =
-  /(提出してください|提出すること|確認してください|確認すること|周知してください|対応してください|記載すること|届け出ること|届出が必要|確認する必要|添付すること|送付します)/u;
-
 export type SourceType = "pdf" | "pptx" | "txt" | "md" | "csv";
 
 export type DocumentRecord = {
@@ -84,7 +81,6 @@ export type DocumentRecord = {
   publishedAt: string | null;
   deadline: string | null;
   summary: string;
-  actions: string[];
   manualKeywords: string[];
   keywords: string[];
   relatedTerms: string[];
@@ -572,7 +568,6 @@ async function buildRecord(
     publishedAt: detectDate(normalizedText),
     deadline: detectDeadline(normalizedText),
     summary: buildSummary(lines),
-    actions: extractActions(normalizedText),
     manualKeywords,
     keywords: mergedKeywords,
     relatedTerms: mergedKeywords.slice(0, 8),
@@ -625,17 +620,6 @@ function detectDeadline(text: string) {
       /(締切|期限|提出期限|申請期限).{0,30}(まで|必着|期限内)/u.test(sentence),
     ) ?? null
   );
-}
-
-function extractActions(text: string) {
-  return Array.from(
-    new Set(
-      splitIntoSentences(text)
-        .map((sentence) => sentence.replace(/\s+/g, " ").trim())
-        .filter((sentence) => sentence.length >= 12 && sentence.length <= 220)
-        .filter((sentence) => ACTION_PATTERN.test(sentence)),
-    ),
-  ).slice(0, 6);
 }
 
 function extractKeywords(text: string) {
@@ -748,7 +732,6 @@ function matchesQuery(doc: DocumentRecord, query: string) {
     doc.preview,
     doc.body,
     doc.keywords.join(" "),
-    doc.actions.join(" "),
     DOCUMENT_CATEGORY_LABELS[doc.category],
   ]
     .join("\n")
