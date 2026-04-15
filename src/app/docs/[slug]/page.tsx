@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isAdminModeToken } from "@/lib/admin";
+import { isAdminModeToken, isAdminModeCookie } from "@/lib/admin";
 import { getDocumentBySlug } from "@/lib/documents";
 import { DOCUMENT_CATEGORY_LABELS } from "@/lib/document-categories";
 import { CategorySelector } from "@/components/category-selector";
@@ -20,8 +20,11 @@ type DetailProps = {
 export default async function DocumentDetail({ params, searchParams }: DetailProps) {
   const { slug } = await params;
   const { admin } = await searchParams;
-  const doc = await getDocumentBySlug(decodeURIComponent(slug));
-  const isAdmin = isAdminModeToken(admin);
+  const [doc, isAdminFromCookie] = await Promise.all([
+    getDocumentBySlug(decodeURIComponent(slug)),
+    isAdminModeCookie(),
+  ]);
+  const isAdmin = isAdminModeToken(admin) || isAdminFromCookie;
 
   if (!doc) {
     notFound();
@@ -70,7 +73,6 @@ export default async function DocumentDetail({ params, searchParams }: DetailPro
               slug={doc.slug}
               category={doc.category}
               editable={isAdmin}
-              adminToken={isAdmin ? admin ?? null : null}
             />
           </div>
 
@@ -86,7 +88,7 @@ export default async function DocumentDetail({ params, searchParams }: DetailPro
           </aside>
         </section>
 
-        <DocumentDetailClient doc={doc} isAdmin={isAdmin} adminToken={isAdmin ? admin ?? null : null} />
+        <DocumentDetailClient doc={doc} isAdmin={isAdmin} />
       </div>
     </main>
   );

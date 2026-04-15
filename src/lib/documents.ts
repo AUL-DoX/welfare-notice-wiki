@@ -3,9 +3,11 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
+import matter from "gray-matter";
 import { DOCUMENT_CATEGORY_LABELS, type DocumentCategory } from "@/lib/document-categories";
 
 export const SOURCE_DOCS_DIR = path.join(process.cwd(), "source-docs");
+export const META_DIR = path.join(SOURCE_DOCS_DIR, "meta");
 const DATA_DIR = path.join(process.cwd(), "data");
 const CATEGORY_FILE_PATH = path.join(DATA_DIR, "document-categories.json");
 const DOCUMENT_METADATA_FILE_PATH = path.join(DATA_DIR, "document-metadata.json");
@@ -242,6 +244,31 @@ export async function updateDocumentKeywords(slug: string, keywords: string[]) {
   }
 
   return { slug: normalizedSlug, manualKeywords };
+}
+
+type MetaFrontmatter = {
+  category?: DocumentCategory;
+  keywords?: string[];
+};
+
+async function loadMetaFrontmatter(filePath: string): Promise<MetaFrontmatter> {
+  const baseName = path.basename(filePath, path.extname(filePath));
+  const metaPath = path.join(META_DIR, `${baseName}.md`);
+
+  try {
+    const raw = await fs.readFile(metaPath, "utf8");
+    const { data } = matter(raw);
+    const category =
+      typeof data.category === "string" && data.category in DOCUMENT_CATEGORY_LABELS
+        ? (data.category as DocumentCategory)
+        : undefined;
+    const keywords = Array.isArray(data.keywords)
+      ? data.keywords.filter((k): k is string => typeof k === "string" && k.trim() !== "")
+      : undefined;
+    return { category, keywords };
+  } catch {
+    return {};
+  }
 }
 
 async function loadCategoryMap(): Promise<CategoryMap> {
@@ -572,7 +599,12 @@ async function buildRecord(
   const keywords = extractKeywords(`${path.basename(filePath)}\n${normalizedText}`);
   const slug = slugify(path.basename(filePath));
   const uploadedAt = documentMetadata[slug]?.uploadedAt ?? stats.birthtime.toISOString();
-  const manualKeywords = documentKeywords[slug]?.manualKeywords ?? [];
+
+  // frontmatter（Obsidian meta）を優先、なければJSONフォールバック
+  const meta = await loadMetaFrontmatter(filePath);
+  const manualKeywords = meta.keywords ?? documentKeywords[slug]?.manualKeywords ?? [];
+  const category = meta.category ?? categoryMap[slug] ?? "unclassified";
+
   const mergedKeywords = Array.from(new Set([...manualKeywords, ...keywords]));
 
   return {
@@ -580,7 +612,7 @@ async function buildRecord(
     fileName: path.basename(filePath),
     filePath,
     sourceType,
-    category: categoryMap[slug] ?? "unclassified",
+    category,
     title: deriveTitle(path.basename(filePath), lines, slideTitles),
     issuer: detectIssuer(normalizedText),
     publishedAt: detectDate(normalizedText),

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "fast-xml-parser": "^5.5.11",
+    "gray-matter": "^4.0.3",
     "jszip": "^3.10.1",
     "next": "16.2.3",
     "pdf-parse": "^1.1.1",

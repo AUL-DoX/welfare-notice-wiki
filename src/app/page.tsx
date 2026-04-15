@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getDocumentIndex } from "@/lib/documents";
 import { DOCUMENT_CATEGORY_LABELS } from "@/lib/document-categories";
 import { CategorySelector } from "@/components/category-selector";
+import { isAdminModeCookie } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,10 @@ type HomeProps = {
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const query = params.q ?? "";
-  const { documents, sourceCount, failedDocuments } = await getDocumentIndex(query);
+  const [{ documents, sourceCount, failedDocuments }, isAdmin] = await Promise.all([
+    getDocumentIndex(query),
+    isAdminModeCookie(),
+  ]);
   const latestDocument = documents[0] ?? null;
 
   return (
@@ -128,7 +132,7 @@ export default async function Home({ searchParams }: HomeProps) {
                         </p>
                       </Link>
                       <div className="px-1">
-                        <CategorySelector slug={doc.slug} category={doc.category} compact />
+                        <CategorySelector slug={doc.slug} category={doc.category} compact editable={isAdmin} />
                       </div>
                     </div>
                   ))}
@@ -171,7 +175,7 @@ export default async function Home({ searchParams }: HomeProps) {
                   </a>
                 </div>
 
-                <CategorySelector slug={latestDocument.slug} category={latestDocument.category} />
+                <CategorySelector slug={latestDocument.slug} category={latestDocument.category} editable={isAdmin} />
               </article>
 
               <aside className="space-y-3 rounded-[1.35rem] bg-stone-50 p-4">
