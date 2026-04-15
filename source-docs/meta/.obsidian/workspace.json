@@ -11,10 +11,14 @@
             "id": "dde1a18bc151ecf1",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "グラフビュー"
+              "type": "split-diff-view",
+              "state": {
+                "aFile": "source-docs/meta/.obsidian/workspace.json",
+                "bFile": "source-docs/meta/.obsidian/workspace.json",
+                "aRef": ""
+              },
+              "icon": "diff",
+              "title": "Diff: workspace.json  (Working Tree)"
             }
           }
         ]
