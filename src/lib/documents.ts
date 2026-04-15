@@ -636,7 +636,7 @@ async function buildRecord(
     summary: buildSummary(lines),
     manualKeywords,
     keywords: mergedKeywords,
-    relatedTerms: mergedKeywords.slice(0, 8),
+    relatedTerms: manualKeywords.slice(0, 10),
     preview: buildPreview(normalizedText),
     body: normalizedText,
     slideTitles,
