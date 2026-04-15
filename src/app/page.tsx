@@ -123,7 +123,7 @@ export default async function Home({ searchParams }: HomeProps) {
                         className="block rounded-[1rem] bg-white px-4 py-3 transition hover:bg-amber-50"
                       >
                         <p className="text-sm font-medium text-stone-500 md:text-base">
-                          {formatDate(doc.updatedAt)}
+                          {formatDate(doc.uploadedAt)}
                         </p>
                         <p className="mt-1 text-base font-semibold leading-7 text-stone-900 md:text-lg">
                           {doc.title}

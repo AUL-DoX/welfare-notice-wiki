@@ -66,11 +66,11 @@ export default async function DocumentDetail({ params }: DetailProps) {
           <aside className="self-start space-y-4 rounded-[1.5rem] bg-stone-50 p-4">
             <DetailBlock label="原本ファイル">{doc.fileName}</DetailBlock>
             <DetailBlock label="締切候補">{doc.deadline ?? "未抽出"}</DetailBlock>
-            <DetailBlock label="最終更新">
+            <DetailBlock label="アップロード日">
               {new Intl.DateTimeFormat("ja-JP", {
                 dateStyle: "medium",
                 timeStyle: "short",
-              }).format(new Date(doc.updatedAt))}
+              }).format(new Date(doc.uploadedAt))}
             </DetailBlock>
           </aside>
         </section>

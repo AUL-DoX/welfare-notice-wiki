@@ -8,6 +8,7 @@ import { DOCUMENT_CATEGORY_LABELS, type DocumentCategory } from "@/lib/document-
 export const SOURCE_DOCS_DIR = path.join(process.cwd(), "source-docs");
 const DATA_DIR = path.join(process.cwd(), "data");
 const CATEGORY_FILE_PATH = path.join(DATA_DIR, "document-categories.json");
+const DOCUMENT_METADATA_FILE_PATH = path.join(DATA_DIR, "document-metadata.json");
 const require = createRequire(import.meta.url);
 
 const xmlParser = new XMLParser({
@@ -88,6 +89,7 @@ export type DocumentRecord = {
   preview: string;
   body: string;
   slideTitles: string[];
+  uploadedAt: string;
   updatedAt: string;
 };
 
@@ -105,6 +107,12 @@ export type SearchResult = {
 };
 
 type CategoryMap = Record<string, DocumentCategory>;
+type DocumentMetadataMap = Record<
+  string,
+  {
+    uploadedAt: string;
+  }
+>;
 
 export async function ensureSourceDocsDir() {
   await fs.mkdir(SOURCE_DOCS_DIR, { recursive: true });
@@ -125,10 +133,14 @@ export async function getDocumentIndex(query?: string): Promise<SearchResult> {
     .map((entry) => path.join(SOURCE_DOCS_DIR, entry.name));
 
   const categoryMap = await loadCategoryMap();
-  const results = await Promise.all(files.map((filePath) => parseDocument(filePath, categoryMap)));
+  const documentMetadata = await loadDocumentMetadata();
+  await syncDocumentMetadata(files, documentMetadata);
+  const results = await Promise.all(
+    files.map((filePath) => parseDocument(filePath, categoryMap, documentMetadata)),
+  );
   const documents = results
     .flatMap((result) => (result.ok ? [result.document] : []))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt) || b.updatedAt.localeCompare(a.updatedAt));
   const failedDocuments = results.flatMap((result) => (result.ok ? [] : [result.failed]));
 
   for (const failed of failedDocuments) {
@@ -205,20 +217,77 @@ async function loadCategoryMap(): Promise<CategoryMap> {
   }
 }
 
-async function parseDocument(filePath: string, categoryMap: CategoryMap) {
+async function loadDocumentMetadata(): Promise<DocumentMetadataMap> {
+  try {
+    const raw = await fs.readFile(DOCUMENT_METADATA_FILE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as Record<string, { uploadedAt?: unknown }>;
+
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([key, value]) => {
+        if (typeof value?.uploadedAt !== "string") {
+          return [];
+        }
+
+        return [[key, { uploadedAt: value.uploadedAt }]];
+      }),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return {};
+    }
+
+    throw error;
+  }
+}
+
+async function syncDocumentMetadata(files: string[], documentMetadata: DocumentMetadataMap) {
+  let changed = false;
+
+  for (const filePath of files) {
+    const slug = slugify(path.basename(filePath));
+    if (documentMetadata[slug]) {
+      continue;
+    }
+
+    const stats = await fs.stat(filePath);
+    documentMetadata[slug] = {
+      uploadedAt: stats.birthtime.toISOString(),
+    };
+    changed = true;
+  }
+
+  if (!changed) {
+    return;
+  }
+
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(DOCUMENT_METADATA_FILE_PATH, JSON.stringify(documentMetadata, null, 2), "utf8");
+}
+
+async function parseDocument(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+) {
   const extension = path.extname(filePath).toLowerCase();
 
   try {
     switch (extension) {
       case ".pdf":
-        return { ok: true as const, document: await parsePdf(filePath, categoryMap) };
+        return { ok: true as const, document: await parsePdf(filePath, categoryMap, documentMetadata) };
       case ".pptx":
-        return { ok: true as const, document: await parsePptx(filePath, categoryMap) };
+        return { ok: true as const, document: await parsePptx(filePath, categoryMap, documentMetadata) };
       case ".md":
       case ".txt":
-        return { ok: true as const, document: await parseTextDocument(filePath, categoryMap) };
+        return {
+          ok: true as const,
+          document: await parseTextDocument(filePath, categoryMap, documentMetadata),
+        };
       case ".csv":
-        return { ok: true as const, document: await parseCsvDocument(filePath, categoryMap) };
+        return {
+          ok: true as const,
+          document: await parseCsvDocument(filePath, categoryMap, documentMetadata),
+        };
       default:
         return {
           ok: false as const,
@@ -241,7 +310,11 @@ async function parseDocument(filePath: string, categoryMap: CategoryMap) {
   }
 }
 
-async function parsePdf(filePath: string, categoryMap: CategoryMap) {
+async function parsePdf(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+) {
   const buffer = await fs.readFile(filePath);
   const pdfjs = require("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js") as {
     disableWorker: boolean;
@@ -289,10 +362,14 @@ async function parsePdf(filePath: string, categoryMap: CategoryMap) {
   }
 
   document.destroy();
-  return buildRecord(filePath, "pdf", text, [], categoryMap);
+  return buildRecord(filePath, "pdf", text, [], categoryMap, documentMetadata);
 }
 
-async function parsePptx(filePath: string, categoryMap: CategoryMap) {
+async function parsePptx(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+) {
   const buffer = await fs.readFile(filePath);
   const zip = await JSZip.loadAsync(buffer);
   const slideEntries = Object.keys(zip.files)
@@ -312,18 +389,33 @@ async function parsePptx(filePath: string, categoryMap: CategoryMap) {
     .filter((line): line is string => Boolean(line))
     .slice(0, 12);
 
-  return buildRecord(filePath, "pptx", slides.join("\n\n"), slideTitles, categoryMap);
+  return buildRecord(filePath, "pptx", slides.join("\n\n"), slideTitles, categoryMap, documentMetadata);
 }
 
-async function parseTextDocument(filePath: string, categoryMap: CategoryMap) {
+async function parseTextDocument(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+) {
   const text = await fs.readFile(filePath, "utf8");
-  return buildRecord(filePath, path.extname(filePath).slice(1) as SourceType, text, [], categoryMap);
+  return buildRecord(
+    filePath,
+    path.extname(filePath).slice(1) as SourceType,
+    text,
+    [],
+    categoryMap,
+    documentMetadata,
+  );
 }
 
-async function parseCsvDocument(filePath: string, categoryMap: CategoryMap) {
+async function parseCsvDocument(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+) {
   const buffer = await fs.readFile(filePath);
   const csvText = decodeCsvBuffer(buffer);
-  return buildRecord(filePath, "csv", csvToReadableText(csvText), [], categoryMap);
+  return buildRecord(filePath, "csv", csvToReadableText(csvText), [], categoryMap, documentMetadata);
 }
 
 function extractSlideNumber(name: string) {
@@ -359,6 +451,7 @@ async function buildRecord(
   rawText: string,
   slideTitles: string[],
   categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
 ): Promise<DocumentRecord> {
   const stats = await fs.stat(filePath);
   const normalizedText = normalizeText(rawText);
@@ -368,6 +461,7 @@ async function buildRecord(
     .filter(Boolean);
   const keywords = extractKeywords(`${path.basename(filePath)}\n${normalizedText}`);
   const slug = slugify(path.basename(filePath));
+  const uploadedAt = documentMetadata[slug]?.uploadedAt ?? stats.birthtime.toISOString();
 
   return {
     slug,
@@ -386,6 +480,7 @@ async function buildRecord(
     preview: buildPreview(normalizedText),
     body: normalizedText,
     slideTitles,
+    uploadedAt,
     updatedAt: stats.mtime.toISOString(),
   };
 }
