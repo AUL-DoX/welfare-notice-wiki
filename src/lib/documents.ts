@@ -490,12 +490,13 @@ async function parsePdf(
     let pageText = "";
 
     for (const item of textContent.items) {
-      if (lastY === undefined || lastY === item.transform[5]) {
+      const y = item.transform[5];
+      if (lastY === undefined || Math.abs(lastY - y) < 2) {
         pageText += item.str;
       } else {
         pageText += `\n${item.str}`;
       }
-      lastY = item.transform[5];
+      lastY = y;
     }
 
     text += `\n\n${pageText}`;
