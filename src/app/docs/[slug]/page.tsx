@@ -57,12 +57,6 @@ export default async function DocumentDetail({ params, searchParams }: DetailPro
                 元ファイルを開く
               </a>
               <Link
-                href={`/wordpress/${encodeURIComponent(doc.slug)}`}
-                className="rounded-full bg-amber-100 px-5 py-3 text-base font-semibold text-amber-950 transition hover:bg-amber-200 md:text-lg"
-              >
-                WordPress用HTML
-              </Link>
-              <Link
                 href={`/?q=${encodeURIComponent(doc.title.split(" ").slice(0, 2).join(" "))}`}
                 className="rounded-full border border-stone-300 px-5 py-3 text-base font-semibold text-stone-800 transition hover:border-amber-900 hover:text-amber-900 md:text-lg"
               >
