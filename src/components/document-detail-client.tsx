@@ -103,7 +103,12 @@ export function DocumentDetailClient({ doc, isAdmin = false, adminToken = null }
     <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
       <article className="rounded-[2rem] border border-stone-200/80 bg-white p-5 shadow-[0_18px_55px_rgba(55,43,24,0.06)]">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold md:text-3xl">全文</h2>
+          <div>
+            <h2 className="text-2xl font-semibold md:text-3xl">全文</h2>
+            <p className="mt-1 text-xs leading-5 text-stone-400">
+              元資料の作成方法によっては、文字の整列が崩れて表示される場合があります。その場合は「元ファイルを開く」でご確認ください。
+            </p>
+          </div>
           {focus ? (
             <Link
               href={`/docs/${encodeURIComponent(doc.slug)}`}
