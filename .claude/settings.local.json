@@ -8,7 +8,8 @@
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
       "Bash(git rm:*)",
-      "Bash(grep -v \"^meta$\")"
+      "Bash(grep -v \"^meta$\")",
+      "Bash(node -e ':*)"
     ]
   }
 }
