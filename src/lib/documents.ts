@@ -372,8 +372,12 @@ async function syncDocumentMetadata(files: string[], documentMetadata: DocumentM
     }
 
     const stats = await fs.stat(filePath);
+    const EPOCH_THRESHOLD = new Date("2000-01-01").getTime();
+    const birthtime = stats.birthtime.getTime();
     documentMetadata[slug] = {
-      uploadedAt: stats.birthtime.toISOString(),
+      uploadedAt: birthtime > EPOCH_THRESHOLD
+        ? stats.birthtime.toISOString()
+        : new Date().toISOString(),
     };
     changed = true;
   }
