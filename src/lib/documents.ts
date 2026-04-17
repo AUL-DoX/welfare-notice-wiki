@@ -125,18 +125,32 @@ export async function ensureSourceDocsDir() {
   await fs.mkdir(DATA_DIR, { recursive: true });
 }
 
+async function listSourceFiles(dir: string): Promise<string[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const results: string[] = [];
+
+  for (const entry of entries) {
+    if (entry.name.startsWith(".")) continue;
+    if (entry.name.toLowerCase() === "readme.md") continue;
+
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      if (fullPath === META_DIR) continue; // meta保管庫はスキップ
+      const subFiles = await listSourceFiles(fullPath);
+      results.push(...subFiles);
+    } else if (entry.isFile()) {
+      results.push(fullPath);
+    }
+  }
+
+  return results;
+}
+
 export async function getDocumentIndex(query?: string): Promise<SearchResult> {
   await ensureSourceDocsDir();
 
-  const entries = await fs.readdir(SOURCE_DOCS_DIR, { withFileTypes: true });
-  const files = entries
-    .filter(
-      (entry) =>
-        entry.isFile() &&
-        !entry.name.startsWith(".") &&
-        entry.name.toLowerCase() !== "readme.md",
-    )
-    .map((entry) => path.join(SOURCE_DOCS_DIR, entry.name));
+  const files = await listSourceFiles(SOURCE_DOCS_DIR);
 
   const categoryMap = await loadCategoryMap();
   const documentMetadata = await loadDocumentMetadata();
