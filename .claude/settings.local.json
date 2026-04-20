@@ -9,7 +9,26 @@
       "Bash(git push:*)",
       "Bash(git rm:*)",
       "Bash(grep -v \"^meta$\")",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(python shift_scheduler.py)",
+      "Bash(python -)",
+      "Bash(start pythonw *)",
+      "Bash(python -c \"import flask; print\\(flask.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(node --input-type=module --eval ' *)",
+      "Bash(node --check scripts/serve.mjs)",
+      "Bash(node scripts/serve.mjs)",
+      "Bash(curl -s http://127.0.0.1:4173/shift-scheduler.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:4173/assets/css/shift-scheduler.css)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:4173/assets/js/shift-scheduler-ui-v2.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:4173/)",
+      "Bash(kill %1)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 13052 /F)",
+      "Bash(cmd.exe /c \"taskkill /PID 13052 /F\")",
+      "Bash(powershell -Command \"Stop-Process -Id 13052 -Force\")",
+      "Bash(python shift_solver.py)",
+      "Bash(PYTHONUTF8=1 python shift_solver.py)"
     ]
   }
 }
