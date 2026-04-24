@@ -184,6 +184,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "publish:パブリッシュによる変更の公開": false,
       "switcher:クイックスイッチャーを開く": false,
       "graph:グラフビューを開く": false,
       "canvas:新規キャンバスを作成": false,
