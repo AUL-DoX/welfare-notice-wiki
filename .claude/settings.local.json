@@ -29,7 +29,8 @@
       "Bash(powershell -Command \"Stop-Process -Id 13052 -Force\")",
       "Bash(python shift_solver.py)",
       "Bash(PYTHONUTF8=1 python shift_solver.py)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(npx tsx *)"
     ]
   }
 }

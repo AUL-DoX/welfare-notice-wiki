@@ -20,11 +20,11 @@ export function renderWordPressHtml(doc: DocumentRecord) {
     .join("\n");
 
   return `
-<!-- wp:group {"style":{"spacing":{"blockGap":"24px"}},"layout":{"type":"constrained"}} -->
-<div class="wp-block-group welfare-notice-wiki">
+<!-- wp:html -->
+<div class="welfare-notice-wiki">
 ${sections}
 </div>
-<!-- /wp:group -->
+<!-- /wp:html -->
   `.trim();
 }
 

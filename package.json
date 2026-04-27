@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "wp-publish": "tsx --tsconfig tsconfig.json scripts/wp-publish.ts"
   },
   "dependencies": {
     "fast-xml-parser": "^5.5.11",
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
