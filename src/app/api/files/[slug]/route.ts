@@ -31,6 +31,12 @@ function getContentType(type: string) {
       return "application/pdf";
     case "pptx":
       return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    case "xlsx":
+      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    case "xlsm":
+      return "application/vnd.ms-excel.sheet.macroEnabled.12";
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     case "md":
       return "text/markdown; charset=utf-8";
     case "csv":

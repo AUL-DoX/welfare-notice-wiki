@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
 import matter from "gray-matter";
 import { DOCUMENT_CATEGORY_LABELS, type DocumentCategory } from "@/lib/document-categories";
+import { extractDocxText, extractXlsxText } from "@/lib/office-text";
 
 export const SOURCE_DOCS_DIR = path.join(process.cwd(), "source-docs");
 export const META_DIR = path.join(SOURCE_DOCS_DIR, "meta");
@@ -70,7 +71,7 @@ const STOP_WORDS = new Set([
   "html",
 ]);
 
-export type SourceType = "pdf" | "pptx" | "txt" | "md" | "csv";
+export type SourceType = "pdf" | "pptx" | "txt" | "md" | "csv" | "xlsx" | "xlsm" | "docx";
 
 export type DocumentRecord = {
   slug: string;
@@ -176,7 +177,7 @@ export async function getDocumentIndex(query?: string): Promise<SearchResult> {
   return {
     documents: filtered,
     sourceCount: documents.length,
-    supportedExtensions: [".pdf", ".pptx", ".md", ".txt", ".csv"],
+    supportedExtensions: [".pdf", ".pptx", ".md", ".txt", ".csv", ".xlsx", ".xlsm", ".docx"],
     failedDocuments,
   };
 }
@@ -282,6 +283,7 @@ function parseCategory(value: unknown): DocumentCategory | undefined {
 type MetaFrontmatter = {
   category?: DocumentCategory;
   keywords?: string[];
+  title?: string;
 };
 
 async function loadMetaFrontmatter(filePath: string): Promise<MetaFrontmatter> {
@@ -290,15 +292,25 @@ async function loadMetaFrontmatter(filePath: string): Promise<MetaFrontmatter> {
 
   try {
     const raw = await fs.readFile(metaPath, "utf8");
-    const { data } = matter(raw);
+    const { data, content } = matter(raw);
     const category = parseCategory(data.category);
     const keywords = Array.isArray(data.keywords)
       ? data.keywords.filter((k): k is string => typeof k === "string" && k.trim() !== "")
       : undefined;
-    return { category, keywords };
+    const title = typeof data.title === "string" && data.title.trim()
+      ? data.title.trim()
+      : extractFirstHeading(content);
+    return { category, keywords, title };
   } catch {
     return {};
   }
+}
+
+function extractFirstHeading(content: string) {
+  return content
+    .split(/\r?\n/u)
+    .map((line) => line.match(/^#\s+(.+)$/u)?.[1]?.trim())
+    .find((line): line is string => Boolean(line));
 }
 
 async function loadCategoryMap(): Promise<CategoryMap> {
@@ -433,6 +445,17 @@ async function parseDocument(
         return {
           ok: true as const,
           document: await parsePptx(filePath, categoryMap, documentMetadata, documentKeywords),
+        };
+      case ".xlsx":
+      case ".xlsm":
+        return {
+          ok: true as const,
+          document: await parseXlsxDocument(filePath, categoryMap, documentMetadata, documentKeywords),
+        };
+      case ".docx":
+        return {
+          ok: true as const,
+          document: await parseDocxDocument(filePath, categoryMap, documentMetadata, documentKeywords),
         };
       case ".md":
       case ".txt":
@@ -579,6 +602,41 @@ async function parseTextDocument(
   );
 }
 
+async function parseXlsxDocument(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
+) {
+  const sourceType = path.extname(filePath).toLowerCase() === ".xlsm" ? "xlsm" : "xlsx";
+  return buildRecord(
+    filePath,
+    sourceType,
+    await extractXlsxText(filePath),
+    [],
+    categoryMap,
+    documentMetadata,
+    documentKeywords,
+  );
+}
+
+async function parseDocxDocument(
+  filePath: string,
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
+) {
+  return buildRecord(
+    filePath,
+    "docx",
+    await extractDocxText(filePath),
+    [],
+    categoryMap,
+    documentMetadata,
+    documentKeywords,
+  );
+}
+
 async function parseCsvDocument(
   filePath: string,
   categoryMap: CategoryMap,
@@ -649,7 +707,7 @@ async function buildRecord(
     filePath,
     sourceType,
     category,
-    title: deriveTitle(path.basename(filePath), lines, slideTitles),
+    title: meta.title ?? deriveTitle(path.basename(filePath), lines, slideTitles),
     issuer: detectIssuer(normalizedText),
     publishedAt: detectDate(normalizedText),
     deadline: detectDeadline(normalizedText),
@@ -666,8 +724,11 @@ async function buildRecord(
 }
 
 function deriveTitle(fileName: string, lines: string[], slideTitles: string[]) {
-  const title = [...slideTitles, ...lines].find((line) => line.length >= 4 && line.length <= 100);
-  return title ?? fileName.replace(path.extname(fileName), "");
+  const fileTitle = fileName.replace(path.extname(fileName), "");
+  const title = [...slideTitles, fileTitle, ...lines].find(
+    (line) => line.length >= 4 && line.length <= 120 && !/^Sheet\s*\d+$/iu.test(line),
+  );
+  return title ?? fileTitle;
 }
 
 function detectIssuer(text: string) {
