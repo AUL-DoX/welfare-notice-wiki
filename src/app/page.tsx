@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getDocumentIndex } from "@/lib/documents";
 import { DOCUMENT_CATEGORY_LABELS } from "@/lib/document-categories";
 import { CategorySelector } from "@/components/category-selector";
+import { SourceFileLink } from "@/components/source-file-link";
 import { isAdminModeCookie } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
@@ -167,14 +168,12 @@ export default async function Home({ searchParams }: HomeProps) {
                   >
                     全文を見る
                   </Link>
-                  <a
-                    href={`/api/files/${encodeURIComponent(latestDocument.slug)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <SourceFileLink
+                    slug={latestDocument.slug}
                     className="text-base font-semibold text-stone-700 underline decoration-stone-300 underline-offset-4 transition hover:text-amber-900 hover:decoration-amber-900 md:text-lg"
                   >
                     元ファイルを開く
-                  </a>
+                  </SourceFileLink>
                 </div>
 
                 <CategorySelector slug={latestDocument.slug} category={latestDocument.category} editable={isAdmin} />

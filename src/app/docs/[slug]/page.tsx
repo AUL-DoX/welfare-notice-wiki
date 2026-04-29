@@ -5,6 +5,7 @@ import { getDocumentBySlug } from "@/lib/documents";
 import { DOCUMENT_CATEGORY_LABELS } from "@/lib/document-categories";
 import { CategorySelector } from "@/components/category-selector";
 import { DocumentDetailClient } from "@/components/document-detail-client";
+import { SourceFileLink } from "@/components/source-file-link";
 
 export const dynamic = "force-dynamic";
 
@@ -50,14 +51,12 @@ export default async function DocumentDetail({ params, searchParams }: DetailPro
               <p className="mt-3 text-xl leading-10 text-stone-700">{doc.summary}</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <a
-                href={`/api/files/${encodeURIComponent(doc.slug)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <SourceFileLink
+                slug={doc.slug}
                 className="rounded-full bg-stone-900 px-5 py-3 text-base font-semibold text-stone-50 transition hover:bg-amber-900 md:text-lg"
               >
                 元ファイルを開く
-              </a>
+              </SourceFileLink>
               <Link
                 href={`/?q=${encodeURIComponent(doc.title.split(" ").slice(0, 2).join(" "))}`}
                 className="rounded-full border border-stone-300 px-5 py-3 text-base font-semibold text-stone-800 transition hover:border-amber-900 hover:text-amber-900 md:text-lg"
