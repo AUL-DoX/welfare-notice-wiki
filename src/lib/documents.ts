@@ -71,7 +71,7 @@ const STOP_WORDS = new Set([
   "html",
 ]);
 
-export type SourceType = "pdf" | "pptx" | "txt" | "md" | "csv" | "xlsx" | "xlsm" | "docx";
+export type SourceType = "pdf" | "pptx" | "txt" | "md" | "csv" | "xlsx" | "xlsm" | "xls" | "docx" | "doc";
 
 export type DocumentRecord = {
   slug: string;
@@ -177,7 +177,7 @@ export async function getDocumentIndex(query?: string): Promise<SearchResult> {
   return {
     documents: filtered,
     sourceCount: documents.length,
-    supportedExtensions: [".pdf", ".pptx", ".md", ".txt", ".csv", ".xlsx", ".xlsm", ".docx"],
+    supportedExtensions: [".pdf", ".pptx", ".md", ".txt", ".csv", ".xlsx", ".xlsm", ".xls", ".docx", ".doc"],
     failedDocuments,
   };
 }
@@ -452,10 +452,20 @@ async function parseDocument(
           ok: true as const,
           document: await parseXlsxDocument(filePath, categoryMap, documentMetadata, documentKeywords),
         };
+      case ".xls":
+        return {
+          ok: true as const,
+          document: await parseLegacyOfficeDocument(filePath, "xls", categoryMap, documentMetadata, documentKeywords),
+        };
       case ".docx":
         return {
           ok: true as const,
           document: await parseDocxDocument(filePath, categoryMap, documentMetadata, documentKeywords),
+        };
+      case ".doc":
+        return {
+          ok: true as const,
+          document: await parseLegacyOfficeDocument(filePath, "doc", categoryMap, documentMetadata, documentKeywords),
         };
       case ".md":
       case ".txt":
@@ -635,6 +645,16 @@ async function parseDocxDocument(
     documentMetadata,
     documentKeywords,
   );
+}
+
+async function parseLegacyOfficeDocument(
+  filePath: string,
+  sourceType: "xls" | "doc",
+  categoryMap: CategoryMap,
+  documentMetadata: DocumentMetadataMap,
+  documentKeywords: DocumentKeywordMap,
+) {
+  return buildRecord(filePath, sourceType, "", [], categoryMap, documentMetadata, documentKeywords);
 }
 
 async function parseCsvDocument(

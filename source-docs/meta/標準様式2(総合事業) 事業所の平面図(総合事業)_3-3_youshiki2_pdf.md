@@ -1,0 +1,24 @@
+---
+category: care
+title: "標準様式2（総合事業） 事業所の平面図（総合事業）"
+source: 札幌市
+source_page: https://www.city.sapporo.jp/kaigo/k200jigyo/kyotaku-siteikoushinn.html#kimmukeitai
+source_url: https://www.city.sapporo.jp/kaigo/k200jigyo/documents/3-3_youshiki2.pdf
+retrieved_at: 2026-04-29T06:58:34.423Z
+context: "事業所の平面図（総合事業）"
+keywords:
+  - "札幌市"
+  - "介護保険"
+  - "介護保険サービス"
+  - "指定更新申請（居宅サービス・総合事業）"
+  - "事業所の平面図（総合事業）"
+  - "標準様式2"
+  - "総合事業"
+  - "事業所の平面図"
+---
+
+# 標準様式2（総合事業） 事業所の平面図（総合事業）
+
+- 元ファイル: [[2026/sapporo-care-renewal/標準様式2(総合事業) 事業所の平面図(総合事業)_3-3_youshiki2_pdf.pdf]]
+- 掲載元: [札幌市 指定更新申請（居宅サービス・総合事業）](https://www.city.sapporo.jp/kaigo/k200jigyo/kyotaku-siteikoushinn.html#kimmukeitai)
+- 直接URL: https://www.city.sapporo.jp/kaigo/k200jigyo/documents/3-3_youshiki2.pdf

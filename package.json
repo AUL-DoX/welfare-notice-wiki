@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "wp-publish": "tsx --tsconfig tsconfig.json scripts/wp-publish.ts",
-    "import:sapporo-formats": "tsx --tsconfig tsconfig.json scripts/import-sapporo-formats.ts"
+    "import:sapporo-formats": "tsx --tsconfig tsconfig.json scripts/import-sapporo-formats.ts",
+    "import:sapporo-care-formats": "tsx --tsconfig tsconfig.json scripts/import-sapporo-care-formats.ts"
   },
   "dependencies": {
     "fast-xml-parser": "^5.5.11",
