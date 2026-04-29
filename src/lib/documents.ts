@@ -13,7 +13,9 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const CATEGORY_FILE_PATH = path.join(DATA_DIR, "document-categories.json");
 const DOCUMENT_METADATA_FILE_PATH = path.join(DATA_DIR, "document-metadata.json");
 const DOCUMENT_KEYWORDS_FILE_PATH = path.join(DATA_DIR, "document-keywords.json");
+const DOCUMENT_INDEX_FILE_PATH = path.join(DATA_DIR, "document-index.json");
 const require = createRequire(import.meta.url);
+let precomputedIndexCache: DocumentIndexData | null | undefined;
 
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
@@ -121,6 +123,25 @@ type DocumentKeywordMap = Record<
   }
 >;
 
+type DocumentIndexData = {
+  generatedAt: string;
+  documents: DocumentRecord[];
+  failedDocuments: FailedDocument[];
+};
+
+export const SUPPORTED_EXTENSIONS = [
+  ".pdf",
+  ".pptx",
+  ".md",
+  ".txt",
+  ".csv",
+  ".xlsx",
+  ".xlsm",
+  ".xls",
+  ".docx",
+  ".doc",
+];
+
 export async function ensureSourceDocsDir() {
   await fs.mkdir(SOURCE_DOCS_DIR, { recursive: true });
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -149,21 +170,9 @@ async function listSourceFiles(dir: string): Promise<string[]> {
 }
 
 export async function getDocumentIndex(query?: string): Promise<SearchResult> {
-  await ensureSourceDocsDir();
-
-  const files = await listSourceFiles(SOURCE_DOCS_DIR);
-
-  const categoryMap = await loadCategoryMap();
-  const documentMetadata = await loadDocumentMetadata();
-  const documentKeywords = await loadDocumentKeywords();
-  await syncDocumentMetadata(files, documentMetadata);
-  const results = await Promise.all(
-    files.map((filePath) => parseDocument(filePath, categoryMap, documentMetadata, documentKeywords)),
-  );
-  const documents = results
-    .flatMap((result) => (result.ok ? [result.document] : []))
-    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt) || b.updatedAt.localeCompare(a.updatedAt));
-  const failedDocuments = results.flatMap((result) => (result.ok ? [] : [result.failed]));
+  const index = await loadPrecomputedDocumentIndex() ?? await buildDocumentIndexData();
+  const documents = index.documents;
+  const failedDocuments = index.failedDocuments;
 
   for (const failed of failedDocuments) {
     console.error(`[document-parse] ${failed.fileName}: ${failed.error}`);
@@ -177,8 +186,30 @@ export async function getDocumentIndex(query?: string): Promise<SearchResult> {
   return {
     documents: filtered,
     sourceCount: documents.length,
-    supportedExtensions: [".pdf", ".pptx", ".md", ".txt", ".csv", ".xlsx", ".xlsm", ".xls", ".docx", ".doc"],
+    supportedExtensions: SUPPORTED_EXTENSIONS,
     failedDocuments,
+  };
+}
+
+export async function generateDocumentIndexFile() {
+  const index = await buildDocumentIndexData();
+  const portableIndex: DocumentIndexData = {
+    generatedAt: index.generatedAt,
+    failedDocuments: index.failedDocuments,
+    documents: index.documents.map((doc) => ({
+      ...doc,
+      filePath: toSourceRelativePath(doc.filePath),
+    })),
+  };
+
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(DOCUMENT_INDEX_FILE_PATH, `${JSON.stringify(portableIndex, null, 2)}\n`, "utf8");
+  precomputedIndexCache = undefined;
+
+  return {
+    generatedAt: portableIndex.generatedAt,
+    documents: portableIndex.documents.length,
+    failedDocuments: portableIndex.failedDocuments.length,
   };
 }
 
@@ -424,6 +455,105 @@ async function syncDocumentMetadata(files: string[], documentMetadata: DocumentM
 
     throw error;
   }
+}
+
+async function buildDocumentIndexData(): Promise<DocumentIndexData> {
+  await ensureSourceDocsDir();
+
+  const files = await listSourceFiles(SOURCE_DOCS_DIR);
+  const categoryMap = await loadCategoryMap();
+  const documentMetadata = await loadDocumentMetadata();
+  const documentKeywords = await loadDocumentKeywords();
+
+  await syncDocumentMetadata(files, documentMetadata);
+
+  const results = await Promise.all(
+    files.map((filePath) => parseDocument(filePath, categoryMap, documentMetadata, documentKeywords)),
+  );
+
+  return {
+    generatedAt: new Date().toISOString(),
+    documents: results
+      .flatMap((result) => (result.ok ? [result.document] : []))
+      .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt) || b.updatedAt.localeCompare(a.updatedAt)),
+    failedDocuments: results.flatMap((result) => (result.ok ? [] : [result.failed])),
+  };
+}
+
+async function loadPrecomputedDocumentIndex(): Promise<DocumentIndexData | null> {
+  if (precomputedIndexCache !== undefined) {
+    return precomputedIndexCache;
+  }
+
+  try {
+    const raw = await fs.readFile(DOCUMENT_INDEX_FILE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as Partial<DocumentIndexData>;
+
+    if (!Array.isArray(parsed.documents) || !Array.isArray(parsed.failedDocuments)) {
+      precomputedIndexCache = null;
+      return precomputedIndexCache;
+    }
+
+    precomputedIndexCache = {
+      generatedAt: typeof parsed.generatedAt === "string" ? parsed.generatedAt : "",
+      failedDocuments: parsed.failedDocuments.filter(isFailedDocument),
+      documents: parsed.documents
+        .filter(isDocumentRecord)
+        .map((doc) => ({
+          ...doc,
+          filePath: toAbsoluteSourcePath(doc.filePath),
+        })),
+    };
+
+    return precomputedIndexCache;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      precomputedIndexCache = null;
+      return precomputedIndexCache;
+    }
+
+    throw error;
+  }
+}
+
+function isFailedDocument(value: unknown): value is FailedDocument {
+  if (!value || typeof value !== "object") return false;
+  const item = value as FailedDocument;
+  return typeof item.fileName === "string" && typeof item.sourceType === "string" && typeof item.error === "string";
+}
+
+function isDocumentRecord(value: unknown): value is DocumentRecord {
+  if (!value || typeof value !== "object") return false;
+  const item = value as DocumentRecord;
+  return (
+    typeof item.slug === "string" &&
+    typeof item.fileName === "string" &&
+    typeof item.filePath === "string" &&
+    typeof item.sourceType === "string" &&
+    typeof item.title === "string" &&
+    typeof item.summary === "string" &&
+    typeof item.preview === "string" &&
+    typeof item.body === "string" &&
+    typeof item.uploadedAt === "string" &&
+    typeof item.updatedAt === "string" &&
+    Array.isArray(item.manualKeywords) &&
+    Array.isArray(item.keywords) &&
+    Array.isArray(item.relatedTerms) &&
+    Array.isArray(item.slideTitles)
+  );
+}
+
+function toSourceRelativePath(filePath: string) {
+  const relativePath = path.isAbsolute(filePath) ? path.relative(SOURCE_DOCS_DIR, filePath) : filePath;
+  return relativePath.split(path.sep).join("/");
+}
+
+function toAbsoluteSourcePath(filePath: string) {
+  if (path.isAbsolute(filePath)) {
+    return filePath;
+  }
+
+  return path.join(SOURCE_DOCS_DIR, filePath);
 }
 
 async function parseDocument(
