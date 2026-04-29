@@ -169,6 +169,8 @@ export default async function Home({ searchParams }: HomeProps) {
                   </Link>
                   <a
                     href={`/api/files/${encodeURIComponent(latestDocument.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-base font-semibold text-stone-700 underline decoration-stone-300 underline-offset-4 transition hover:text-amber-900 hover:decoration-amber-900 md:text-lg"
                   >
                     元ファイルを開く

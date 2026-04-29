@@ -52,6 +52,8 @@ export default async function DocumentDetail({ params, searchParams }: DetailPro
             <div className="flex flex-wrap gap-3">
               <a
                 href={`/api/files/${encodeURIComponent(doc.slug)}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="rounded-full bg-stone-900 px-5 py-3 text-base font-semibold text-stone-50 transition hover:bg-amber-900 md:text-lg"
               >
                 元ファイルを開く
