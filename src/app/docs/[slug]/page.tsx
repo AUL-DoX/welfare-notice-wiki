@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isAdminModeToken, isAdminModeCookie } from "@/lib/admin";
@@ -17,6 +18,21 @@ type DetailProps = {
     admin?: string;
   }>;
 };
+
+export async function generateMetadata({ params }: DetailProps): Promise<Metadata> {
+  const { slug } = await params;
+  const doc = await getDocumentBySlug(decodeURIComponent(slug));
+  if (!doc) return {};
+
+  const keywordStr = doc.keywords.slice(0, 6).join("、");
+  return {
+    title: `${doc.title} | 福祉通知Wiki`,
+    description: doc.summary
+      ? `${doc.summary.slice(0, 100)}　キーワード：${keywordStr}`
+      : `${doc.title}のページです。キーワード：${keywordStr}`,
+    keywords: doc.keywords,
+  };
+}
 
 export default async function DocumentDetail({ params, searchParams }: DetailProps) {
   const { slug } = await params;
